@@ -47,6 +47,7 @@ void initialCoolEye(int channel){
     readPixelOffset(pixel_offset);
     readPixelSensitivity(pixel_sensitivity);
 
+    usleep(100000);
 }
 
 bool isNewFrameAvailable(){
@@ -67,6 +68,7 @@ bool isNewFrameAvailable(){
 
 bool readFrame(double frame[32][32]){
 
+    usleep(50000);
     int timeout = 100;
     while(1){
 
