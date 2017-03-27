@@ -68,7 +68,6 @@ bool isNewFrameAvailable(){
 
 bool readFrame(double frame[32][32]){
 
-    usleep(50000);
     int timeout = 100;
     while(1){
 
@@ -78,47 +77,52 @@ bool readFrame(double frame[32][32]){
         }
 
         if(isNewFrameAvailable()){
-            //send read frame command
-            buffer[0] = 0x7F;
-            wiringPiSPIDataRW(CHANNEL, buffer, 1);
-            buffer[0] = 0x01;
-            wiringPiSPIDataRW(CHANNEL, buffer, 1);
-            buffer[0] = 0x00;
-            wiringPiSPIDataRW(CHANNEL, buffer, 1);
-            usleep(5000);
-            wiringPiSPIDataRW(CHANNEL, buffer, 2051);
 
-            int pixel;
-            for(int i=0;i<32;i++){
-                for(int j=0;j<32;j++){
-                    pixel = buffer[(i*32+j)*2+3]*256 + buffer[(i*32+j)*2+4];
-                    frame[i][j] = pixel;
+            //Double check
+            usleep(30000);
+            if(isNewFrameAvailable()){
+                //send read frame command
+                buffer[0] = 0x7F;
+                wiringPiSPIDataRW(CHANNEL, buffer, 1);
+                buffer[0] = 0x01;
+                wiringPiSPIDataRW(CHANNEL, buffer, 1);
+                buffer[0] = 0x00;
+                wiringPiSPIDataRW(CHANNEL, buffer, 1);
+                usleep(5000);
+                wiringPiSPIDataRW(CHANNEL, buffer, 2051);
+
+                int pixel;
+                for(int i=0;i<32;i++){
+                    for(int j=0;j<32;j++){
+                        pixel = buffer[(i*32+j)*2+3]*256 + buffer[(i*32+j)*2+4];
+                        frame[i][j] = pixel;
+                    }
                 }
-            }
 
-            //Normalize frame data
-            normalizeFrame(frame);
+                //Normalize frame data
+                normalizeFrame(frame);
 
-            //Calculate ambient temperature
-            double temperature = buffer[1]*256 + buffer[2];
-            //Calculate temperature in degrees Celsius
-            temperature = temperature*PS + PO;
+                //Calculate ambient temperature
+                double temperature = buffer[1]*256 + buffer[2];
+                //Calculate temperature in degrees Celsius
+                temperature = temperature*PS + PO;
 
-            //Calcuate object temperature            
-            double Tobj_formula_term_2 = pow(temperature+273.15,4);
-            for(int i=0;i<32;i++){
-                for(int j=0;j<32;j++){
-                    frame[i][j] = pow((frame[i][j]/Tobj_formula_term_1)+Tobj_formula_term_2, 1/4.0)-273.15;
-                    //Set data to ambient temperature when data equals to nan or something wrong
-                    if(frame[i][j]!=frame[i][j] || frame[i][j]>=50 || frame[i][j]<0)
-                        frame[i][j] = temperature;
+                //Calcuate object temperature            
+                double Tobj_formula_term_2 = pow(temperature+273.15,4);
+                for(int i=0;i<32;i++){
+                    for(int j=0;j<32;j++){
+                        frame[i][j] = pow((frame[i][j]/Tobj_formula_term_1)+Tobj_formula_term_2, 1/4.0)-273.15;
+                        //Set data to ambient temperature when data equals to nan or something wrong
+                        if(frame[i][j]!=frame[i][j] || frame[i][j]>=50 || frame[i][j]<0)
+                            frame[i][j] = temperature;
+                    }
                 }
-            }
 
-            break;
+                break;
+            }
         }
-        //Waiting 15 ms
-        usleep(15000);
+        //Waiting 10 ms
+        usleep(10000);
         timeout-=1;
     }
 
