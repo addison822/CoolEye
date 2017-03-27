@@ -41,7 +41,7 @@ int main(){
     //The default SPI channel is 0,
     //you can also indicate channel 1 
     //by using inttialCoolEye(1);
-    inttialCoolEye();
+    initialCoolEye();
        
     readFrame(frame);
        
